@@ -37,7 +37,9 @@ jobs:
             ninja-build \
             bc \
             xorriso \
-            jam
+            jam \
+            nasm \
+            attr
 
       - name: Configure Haiku and Download Pre-built Cross-Tools
         run: |
