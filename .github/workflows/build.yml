@@ -1,4 +1,4 @@
-name: Build Haiku OS
+name: Build MinOS (Haiku Fork)
 
 on:
   push:
@@ -13,10 +13,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout MinOS repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Checkout Haiku Buildtools
+        uses: actions/checkout@v4
+        with:
+          repository: haiku/buildtools
+          path: buildtools
+          fetch-depth: 1
 
       - name: Install build dependencies
         run: |
@@ -35,29 +42,30 @@ jobs:
             ncurses-dev \
             python3 \
             ninja-build \
-            bc
+            bc \
+            xorriso
 
       - name: Build jam (Haiku Build Tool)
         run: |
-          cd src/build/jam
+          cd buildtools/jam
           make
-          sudo make install
-          cd ../../..
+          sudo ./jam0 install
+          cd ../..
 
-      - name: Build cross-compilation tools
+      - name: Configure and build cross-tools
         run: |
           mkdir -p generated.x86_64
           cd generated.x86_64
-          ../configure --build-cross-tools x86_64
+          ../configure --build-cross-tools x86_64 ../buildtools
 
-      - name: Build Haiku Anyboot Image
+      - name: Build MinOS Anyboot Image
         run: |
           cd generated.x86_64
           jam -q -j$(nproc) @anyboot-image
 
-      - name: Upload Haiku ISO / Anyboot Artifact
+      - name: Upload MinOS Image Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: haiku-anyboot-x86_64
+          name: minos-anyboot-x86_64
           path: generated.x86_64/haiku-anyboot.image
           if-no-files-found: error
