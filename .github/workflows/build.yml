@@ -39,7 +39,7 @@ jobs:
 
       - name: Build jam (Haiku Build Tool)
         run: |
-          cd src/tools/jam
+          cd src/build/jam
           make
           sudo make install
           cd ../../..
