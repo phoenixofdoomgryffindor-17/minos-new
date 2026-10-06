@@ -1,0 +1,63 @@
+name: Build Haiku OS
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build x86_64 Anyboot Image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            git \
+            bison \
+            flex \
+            gawk \
+            texinfo \
+            zlib1g-dev \
+            libcurl4-openssl-dev \
+            genisoimage \
+            mtools \
+            ncurses-dev \
+            python3 \
+            ninja-build \
+            bc
+
+      - name: Build jam (Haiku Build Tool)
+        run: |
+          cd src/tools/jam
+          make
+          sudo make install
+          cd ../../..
+
+      - name: Build cross-compilation tools
+        run: |
+          mkdir -p generated.x86_64
+          cd generated.x86_64
+          ../configure --build-cross-tools x86_64
+
+      - name: Build Haiku Anyboot Image
+        run: |
+          cd generated.x86_64
+          jam -q -j$(nproc) @anyboot-image
+
+      - name: Upload Haiku ISO / Anyboot Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: haiku-anyboot-x86_64
+          path: generated.x86_64/haiku-anyboot.image
+          if-no-files-found: error
