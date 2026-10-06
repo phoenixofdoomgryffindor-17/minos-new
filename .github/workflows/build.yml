@@ -56,7 +56,7 @@ jobs:
         run: |
           mkdir -p generated.x86_64
           cd generated.x86_64
-          ../configure --build-cross-tools x86_64 ../buildtools
+          ../configure --build-cross-tools x86_64 --build-cross-tools-source ../buildtools
 
       - name: Build MinOS Anyboot Image
         run: |
